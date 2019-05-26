@@ -54,7 +54,7 @@ $ sudo python setup.py install
 ## Active Fingerprinting: nmap
 To get the full list of OS to emulate, just use the flag '-n':
 ```
-$ osfooler-ng.py -n
+$ osfooler-ng -n
  [+] Please, select nmap OS to emulate
     + "2N Helios IP VoIP doorbell"
     + "2Wire BT2700HG-V ADSL modem"
@@ -67,7 +67,7 @@ $ osfooler-ng.py -n
 
 To emulate an specific OS, just use the flag '-o' with the OS you want to emulate:
 ```
-$ osfooler-ng.py -m "Sony Ericsson W705 or W715 Walkman mobile phone"
+$ osfooler-ng -m "Sony Ericsson W705 or W715 Walkman mobile phone"
  [+] Mutating to nmap:
       Fingerprint Sony Ericsson W705 or W715 Walkman mobile phone
       Class Sony Ericsson | embedded || phone
@@ -93,7 +93,7 @@ $ osfooler-ng.py -m "Sony Ericsson W705 or W715 Walkman mobile phone"
 ## Passive Fingerprinting: p0f v2
 To get the full list of OS to emulate, just use the flag '-l':
 ```
-$ osfooler-ng.py -p 
+$ osfooler-ng -p 
 Please, select p0f OS Genre and Details
         OS Genre="AIX" Details="4.3"
         OS Genre="AIX" Details="4.3.2 and earlier"
@@ -106,7 +106,7 @@ Please, select p0f OS Genre and Details
 
 To emulate any p0f OS, just use the flag '-o' with the OS Genre. This will choose the main OS and custom version will be randomly loaded when a SYN packet is detected. For example:
 ```
-$ osfooler-ng.py -o "PalmOS"
+$ osfooler-ng -o "PalmOS"
  [+] Mutating to p0f:
       WWW:S9|TTL:255|D:0|SS:44|OOO:M536|QQ:.|OS:PalmOS|DETAILS:Tungsten T3/C
       WWW:S5|TTL:255|D:0|SS:44|OOO:M536|QQ:.|OS:PalmOS|DETAILS:3/4
@@ -122,7 +122,7 @@ $ osfooler-ng.py -o "PalmOS"
  
  You can also emulate the full p0f OS, using '-' with the OS Genre and '-d' with custom details:
  ```
- $ osfooler-ng.py -o "Windows" -d "XP bare-bone"
+ $ osfooler-ng -o "Windows" -d "XP bare-bone"
   [+] Mutating to p0f:
       WWW:65520|TTL:128|D:1|SS:48|OOO:M*,N,N,S|QQ:.|OS:Windows|DETAILS:XP bare-bone
  [+] Activating queues
@@ -160,7 +160,7 @@ $ osfooler-ng -m "Microsoft Windows 2000 SP4" -o "Windows" -d "2000 SP4"
 ## Searching for Operating Systems
 You can search inside nmap/p0f database for a specific OS, instead of getting the whole list. Just use the flag '-s' and enter the keyword you want to search for (case insensitive). You'll get any match found, and if it belongs to nmap or p0f databases:
 ```
-$ osfooler-ng.py -s playstation
+$ osfooler-ng -s playstation
  [+] Searching databases for: 'playstation'
       [nmap] "Sony Playstation 4 or FreeBSD 10.2-RELEASE"
       [nmap] "Sony PlayStation 2 game console test kit 2.2.1"
@@ -173,7 +173,7 @@ $ osfooler-ng.py -s playstation
 ## Update nmap database
 Use the flag '-u' to check if there's a new version of nmap's database avaiable and to download it
 ```
-$ osfooler-ng.py -u
+$ osfooler-ng -u
  [+] Checking nmap database... latest!
 ```
 
@@ -195,4 +195,3 @@ This project is licensed under the The **GNU General Public License v3.0** - see
 * [Defcon China](https://defcon.org/html/dc-china-1/dc-cn-1-index.html), for leting me show this tool on [Demo Labs](https://defcon.org/html/dc-china-1/dc-cn-1-demolabs.html#segofensiva)
 * All those people who have worked and released software on OS fingerprinting (attack and defense), specially [nmap](https://nmap.org/) & [p0f](lcamtuf.coredump.cx/), but also Xprobe, IP Personality etc.
 * OSfooler-ng makes use of the [Scapy Project](https://scapy.net/) and [The netfilter.org "libnetfilter_queue" project](https://netfilter.org/projects/libnetfilter_queue/)
-
