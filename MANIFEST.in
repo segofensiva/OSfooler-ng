@@ -1,0 +1,6 @@
+include requirements.txt
+include README.md
+include LICENSE.md
+include osfooler_ng/dep/*
+include osfooler_ng/*
+recursive-exclude osfooler_ng *.pyc
