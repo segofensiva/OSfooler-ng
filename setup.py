@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="OSfooler-ng",
-    version="v1.00a",
+    version="v1.00b",
     author='Jaime Sanchez (@segofensiva)',
     author_email='jsanchez@seguridadofensiva.com',
     description='OSfooler-ng prevents remote OS active/passive fingerprinting by tools like nmap or p0f',
