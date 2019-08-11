@@ -217,11 +217,10 @@ def get_ipid_new(test):
   return i
 
 # Send ICMP response
-def send_icmp_response(payload, probe):
+def send_icmp_response(pl, probe):
   global icmp_packet
-  global icmp_ipid
-  data = payload.get_data()
-  pkt = ip.IP(data)
+  global icmp_ipid 
+  pkt = ip.IP(pl.get_payload())
   # DON'T FRAGMENT ICMP (DFI)
   if (base[probe][0][1] == "N"):
     frag_bit = 0  # None have it activated
@@ -262,9 +261,8 @@ def send_icmp_response(payload, probe):
        / ICMP(id=pkt.icmp.data.id, seq=pkt.icmp.data.seq, code=code, type=0), verbose=0)
 
 # Send UDP response
-def send_udp_response(payload, probe):
-  data = payload.get_data()
-  pkt = ip.IP(data)
+def send_udp_response(pl, probe): 
+  pkt = ip.IP(pl.get_payload())
   if (base[probe][0][1] == "Y"):
     frag_bit = 2
   else:
@@ -276,10 +274,9 @@ def send_udp_response(payload, probe):
     IP(dst=inet_ntoa(pkt.dst), src=inet_ntoa(pkt.src), id=pkt.id, ttl=TG - 1) / UDP(dport=pkt.udp.dport, sport=pkt.udp.sport), verbose=0)
 
 # Send probe response
-def send_probe_response(payload, probe):
-  global IPID
-  data = payload.get_data()
-  pkt = ip.IP(data)
+def send_probe_response(pl, probe):
+  global IPID 
+  pkt = ip.IP(pl.get_payload())
   # IP DON'T FRAGMENT BIT (DF)
   if (base[probe][1][1] == "Y"):
     frag_bit = 2
@@ -334,10 +331,9 @@ def send_probe_response(payload, probe):
 
 # ECN
 # Send probe response
-def send_ECN_response(payload, probe):
-    global IPID
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def send_ECN_response(pl, probe):
+    global IPID 
+    pkt = ip.IP(pl.get_payload())
     # IP DON'T FRAGMENT BIT (DF)
     df_parsed = parse_nmap_field(base[probe][1][1])
     if (df_parsed == "Y"):
@@ -396,10 +392,9 @@ def send_ECN_response(payload, probe):
     send(IP(id=IPID, dst=inet_ntoa(pkt.src), src=inet_ntoa(pkt.dst), flags=frag_bit, ttl=TG) /
       TCP(sport=pkt.tcp.dport, dport=pkt.tcp.sport, window=W, options=opts, flags=FLAGS), verbose=0)
 
-def send_probe_response_T1(payload, probe, packet):
-    global IPID
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def send_probe_response_T1(pl, probe, packet):
+    global IPID 
+    pkt = ip.IP(pl.get_payload()) 
     # IP DON'T FRAGMENT BIT (DF)
     df_parsed = parse_nmap_field(base[probe][1][1])
     if (df_parsed == "Y"):
@@ -593,29 +588,28 @@ def options_to_scapy(x):
             options.append(('EOL', None))
     return options
 
-def print_tcp_packet(payload, destination):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_tcp_packet(pl, destination): 
+    pkt = ip.IP(pl.get_payload())
     option_list = tcp.parse_opts(pkt.tcp.opts)
+    
     if opts.verbose:
-        print " [+] Modifying '%s' packet in real time (total length %s)" % (destination, payload.get_length())
+        print " [+] Modifying '%s' packet in real time (total length %s)" % (destination, pl.get_payload_len())
         print "      [+] IP:  source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] TCP: sport %s dport %s flags S seq %s ack %s win %s" % (pkt.tcp.sport, pkt.tcp.dport, pkt.tcp.seq, pkt.tcp.ack, pkt.tcp.win)
         print "               options %s" % (opts_human(option_list))
 
-def print_icmp_packet(payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_icmp_packet(pl): 
+    pkt = ip.IP(pl.get_payload())
     if opts.verbose:
-        print " [+] Modifying packet in real time (total length %s)" % payload.get_length()
+        print " [+] Modifying packet in real time (total length %s)" % pl.get_payload_len()
         print "      [+] IP:   source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] ICMP: code %s type %s len %s id %s seq %s" % (pkt.icmp.code, pkt.icmp.type, len(pkt.icmp.data.data), pkt.icmp.data.id, pkt.icmp.data.seq)
 
-def print_udp_packet(payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_udp_packet(pl): 
+    pkt = ip.IP(pl.get_payload())
+
     if opts.verbose:
-        print " [+] Modifying packet in real time (total length %s)" % payload.get_length()
+        print " [+] Modifying packet in real time (total length %s)" % pl.get_payload_len()
         print "      [+] IP:   source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] UDP:  sport %s dport %s len %s" % (pkt.udp.sport, pkt.udp.dport, len(pkt.udp.data))
         print "                data %s" % (pkt.udp.data[0:49])
@@ -643,31 +637,33 @@ def cb_p0f( pl ):
                     sport=pkt.tcp.sport, dport=pkt.tcp.dport, flags='S', seq=pkt.tcp.seq, ack=0), i, osgenre=opts.osgenre, osdetails=opts.details_p0f)
                 if opts.verbose:
                     print_tcp_packet(pl, "p0f")
+                pl.set_payload(str(pkt_send))
+                pl.accept()  
             except Exception, e:
                 print " [+] Unable to modify packet with p0f personality..."
                 print " [+] Aborting"
                 sys.exit()
-                pl.set_payload(str(pkt_send))
-                pl.accept()  
         elif opts.osgenre and not opts.details_p0f:
             try:
                 pkt_send = module_p0f.p0f_impersonate(IP(dst=inet_ntoa(pkt.dst), src=inet_ntoa(pkt.src)) / TCP(
                     sport=pkt.tcp.sport, dport=pkt.tcp.dport, flags='S', seq=pkt.tcp.seq), i, osgenre=opts.osgenre)
                 if opts.verbose:
-                  print_tcp_packet(pl, "p0f")
+                  print_tcp_packet(pl, "p0f") 
+                pl.set_payload(str(pkt_send))
+                pl.accept() 
             except Exception, e:
                 print " [+] Unable to modify packet with p0f personality..."
                 print " [+] Aborting"
                 sys.exit()
-                pl.set_payload(str(pkt_send))
-                pl.accept()
+        else:
+            pl.accept()
     else:
 		    pl.accept()
     return 0
 
 # Process nmap packets
 def cb_nmap( pl): 
-    pkt = ip.IP(pl.get_payload())  
+    pkt = ip.IP(pl.get_payload())   
     if pkt.p == ip.IP_PROTO_TCP:
         # Define vars for conditional loops
         options = pkt.tcp.opts.encode('hex_codec')
@@ -749,14 +745,18 @@ def cb_nmap( pl):
             pl.drop() 
             if (base["ECN"][0][1] == "Y"):
                 send_ECN_response(pl, "ECN")
+        else:
+            pl.accept()
     elif pkt.p == ip.IP_PROTO_UDP:
         if (pkt.udp.data == udp_payload):
             # nmap packet detected: Packet UDP
             print_udp_packet(pl)
             pl.drop() 
             # TODO
-            # if ( base["U1"][0][0] != "R" ):
-                # send_udp_response(payload, "U1")
+            if ( base["U1"][0][0] != "R" ):
+                send_udp_response(pl, "U1")
+        else:
+          pl.accept()
     elif pkt.p == ip.IP_PROTO_ICMP:
         if (pkt.icmp.code == 9) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 120):
             # nmap packet detected: Packet ICMP #1
@@ -764,12 +764,14 @@ def cb_nmap( pl):
             pl.drop() 
             if (base["IE"][0][0] != "R"):
                 send_icmp_response(payload, "IE")
-        if (pkt.icmp.code == 0) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 150):
+        elif (pkt.icmp.code == 0) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 150):
             # nmap packet detected: Packet ICMP #2
             print_icmp_packet(pl)
             pl.drop() 
             if (base["IE"][0][0] != "R"):
                 send_icmp_response(pl, "IE")
+        else: 
+            pl.accept() 
     else:
         pl.accept() 
         return 0
@@ -783,9 +785,7 @@ def init(queue):
   if (queue == 1 and (opts.osgenre or (opts.details_p0f and opts.osgenre))):
     q.bind(1, cb_p0f)
     print "      [->] %s: p0f packet processor" % multiprocessing.current_process().name
-  try:
-    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	  #s.setblocking(False)
+  try: 
     q.run()
   except KeyboardInterrupt,err:
     pass
@@ -936,7 +936,7 @@ def main():
   print " [+] Activating queues"
   procs = []
   # nmap mode
-  if opts.os:
+  if opts.os:  
     os.system("iptables -A INPUT -j NFQUEUE --queue-num 0")
     proc = Process(target=init,args=(0,))
     procs.append(proc)
@@ -944,7 +944,7 @@ def main():
   # p0f mode
   if (opts.osgenre):
     global home_ip
-    home_ip = get_ip_address(interface)
+    home_ip = get_ip_address(interface)  
     os.system("iptables -A OUTPUT -p TCP --syn -j NFQUEUE --queue-num 1")
     proc = Process(target=init,args=(1,))
     procs.append(proc)
