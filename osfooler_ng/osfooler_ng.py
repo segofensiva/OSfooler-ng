@@ -35,6 +35,10 @@ sys.path.append('dpkt-1.6')
 icmp_packet = 0
 IPID = 0
 
+# Started NFQueues
+q_num0 = False
+q_num1 = False
+
 # TCP packet information
 # Control flags
 TH_FIN = 0x01          # end of data
@@ -941,6 +945,8 @@ def main():
     proc = Process(target=init,args=(0,))
     procs.append(proc)
     proc.start()
+    global q_num0
+    q_num0 = True
   # p0f mode
   if (opts.osgenre):
     global home_ip
@@ -949,6 +955,8 @@ def main():
     proc = Process(target=init,args=(1,))
     procs.append(proc)
     proc.start()
+    global q_num1
+    q_num1 = True
   # Detect mode
 
   try:
@@ -957,7 +965,12 @@ def main():
   except KeyboardInterrupt:
       print
       # Flush all iptabels rules
-      os.system("iptables -F")
+      global q_num0
+      global q_num1
+      if (q_num0):
+        os.system("iptables -D INPUT -j NFQUEUE --queue-num 0") 
+      if (q_num1):
+        os.system("iptables -D OUTPUT -p TCP --syn -j NFQUEUE --queue-num 1") 
       print " [+] Active queues removed"
       print " [+] Exiting OSfooler..."
       #for p in multiprocessing.active_children():
