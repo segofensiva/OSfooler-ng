@@ -663,7 +663,7 @@ def cb_p0f( pl ):
             pl.accept()
     else:
 		    pl.accept()
-    return 0
+      #  return 0
 
 # Process nmap packets
 def cb_nmap( pl): 
