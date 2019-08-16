@@ -783,11 +783,11 @@ def cb_nmap( pl):
 
 def init(queue):
   q = nfqueue.NetfilterQueue()
-  if (queue == 0):
-    q.bind(0, cb_nmap)
+  if (queue % 2 ==  0):
+    q.bind(queue, cb_nmap)
     print "      [->] %s: nmap packet processor" % multiprocessing.current_process().name
-  if (queue == 1 and (opts.osgenre or (opts.details_p0f and opts.osgenre))):
-    q.bind(1, cb_p0f)
+  if (queue % 2 ==  1 and (opts.osgenre or (opts.details_p0f and opts.osgenre))):
+    q.bind(queue, cb_p0f)
     print "      [->] %s: p0f packet processor" % multiprocessing.current_process().name
   try: 
     q.run()
@@ -954,7 +954,7 @@ def main():
   # nmap mode
   if opts.os:  
     os.system("iptables -A INPUT -j NFQUEUE --queue-num %s" % q_num0) 
-    proc = Process(target=init,args=(0,))
+    proc = Process(target=init,args=(q_num0,))
     procs.append(proc)
     proc.start() 
   # p0f mode
@@ -962,7 +962,7 @@ def main():
     global home_ip
     home_ip = get_ip_address(interface)  
     os.system("iptables -A OUTPUT -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
-    proc = Process(target=init,args=(1,))
+    proc = Process(target=init,args=(q_num1,))
     procs.append(proc)
     proc.start() 
   # Detect mode
