@@ -11,11 +11,15 @@
 # Synopsis
 
 Check [original repo](https://pypi.org/project/NetfilterQueue/0.8.1/) for info and stuff. 
-You may also be interested of the OSfooler-ng author's speech at [DEF CON 27](https://www.defcon.org/) (running at Aug 8-11 2019)
+You may also be interested of the OSfooler-ng author's speech at [DEF CON 27](https://www.defcon.org/) (Aug 8-11 2019)
 
 This fork based on change of Python's nfqueue (NetfilterQueue) version from 0.5 to 0.8.1 for the sake of run the OSfooler-ng on different distros, not just deb-based.
 
-**You may help hugely by trying this on different distros.**
+Right now it seems that original author has abandoned the project so the work could be continued here. 
+
+
+
+**You may help hugely by trying this on different distros and submit issues.**
 By now it's been tested fine on Arch and CentOS7.
 
 
