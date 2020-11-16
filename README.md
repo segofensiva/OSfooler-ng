@@ -15,18 +15,18 @@
  
 This is a fork of [segofensiva/OSfooler-ng](https://github.com/segofensiva/OSfooler-ng). 
 
-Main reason of that fork is that original project seems to be abandoned proof-of-concept, but the project is still valuable. 
+Main reason of that fork is that original project seems to be an abandoned proof-of-concept, but the project is still valuable. 
 By now the main difference is the change of Python2's nfqueue (NetfilterQueue) version from 0.5 to 0.8.1 for the sake of run the OSfooler-ng on different distros, not just deb-based. 
 
 Yes, it's Python2 yet. If you know how to properly move NetfilterQueue to Python 3.6+ and can test the project nicely and in short time - [your help is welcome](https://github.com/moonbaseDelta/OSfooler-ng/issues/1).
 
-Original author's project presentation can be found on Youtube [https://www.youtube.com/watch?v=psxxT00KavM](https://www.youtube.com/watch?v=psxxT00KavM). You may also find a few articles about OSfooler-NG. This version is a remake of 2014' OSfooler made by the same person, but the old one is archived and concidered lost. 
+Original author's project presentation can be found on Youtube [https://www.youtube.com/watch?v=psxxT00KavM](https://www.youtube.com/watch?v=psxxT00KavM). You may also find a few articles about OSfooler-NG. This version is a remake of 2014' OSfooler made by the same person, but the old one is archived and should be concidered lost.
+The whole topic of OS-fingerprinting and it's defeating is rather obscure.  
+OSfooler-NG is working, but not yet perfect even against nmap and p0f. Any futher help, even testcases, and so is highly needed.
 
-The whole topic of OS-fingerprinting and it's defeating is rather obscure. 
-
-OSfooler-NG is working, but not yet perfect even against nmap and p0f. Any futher help, even testcases, and so is on demand.
+By now it's been tested fine on Arch and CentOS7, CentOS8, Ubuntu 18.04. 
  
-  
+
 
 **You may help hugely by trying this on different distros and submit issues.**
 By now it's been tested fine on Arch and CentOS7.
