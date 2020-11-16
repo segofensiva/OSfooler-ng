@@ -1,52 +1,65 @@
+ 
 <p align="center">
-<img width="256" src="https://i.ibb.co/DLnNK9J/268497.png">
-</p>
-<br>
-
-# OSfooler-NG
- [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Version: 1.0b](https://img.shields.io/badge/version-1.0b-blue.svg)
+  <h1>
+   OSfooler-NG
+   <img align="right" width="256" src="https://github.com/moonbaseDelta/OSfooler-ng/blob/master/logo.png">
+  </h1> 
+ </p> 
+<br> 
+ 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Version: 1.0b](https://img.shields.io/badge/version-1.0b-blue.svg)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/segofensiva/OSfooler-ng/graphs/commit-activity)
  
 # Synopsis
+ 
+This is a fork of [segofensiva/OSfooler-ng](https://github.com/segofensiva/OSfooler-ng). 
 
-Check [original repo](https://pypi.org/project/NetfilterQueue/0.8.1/) for info and stuff. 
-You may also be interested of the OSfooler-ng author's speech at [DEF CON 27](https://www.defcon.org/) (Aug 8-11 2019)
+Main reason of that fork is that original project seems to be abandoned proof-of-concept, but the project is still valuable. 
+By now the main difference is the change of Python2's nfqueue (NetfilterQueue) version from 0.5 to 0.8.1 for the sake of run the OSfooler-ng on different distros, not just deb-based. 
 
-This fork based on change of Python's nfqueue (NetfilterQueue) version from 0.5 to 0.8.1 for the sake of run the OSfooler-ng on different distros, not just deb-based.
+Yes, it's Python2 yet. If you know how to properly move NetfilterQueue to Python 3.6+ and can test the project nicely and in short time - [your help is welcome](https://github.com/moonbaseDelta/OSfooler-ng/issues/1).
 
-Right now it seems that original author has abandoned the project so the work could be continued here. 
+Original author's project presentation can be found on Youtube [https://www.youtube.com/watch?v=psxxT00KavM](https://www.youtube.com/watch?v=psxxT00KavM). You may also find a few articles about OSfooler-NG. This version is a remake of 2014' OSfooler made by the same person, but the old one is archived and concidered lost. 
 
+The whole topic of OS-fingerprinting and it's defeating is rather obscure. 
 
+OSfooler-NG is working, but not yet perfect even against nmap and p0f. Any futher help, even testcases, and so is on demand.
+ 
+  
 
 **You may help hugely by trying this on different distros and submit issues.**
 By now it's been tested fine on Arch and CentOS7.
 
 
 
-# Install
+# Installation
+
+
 To get this version, just use git:
 ```
 $ git clone https://github.com/moonbaseDelta/OSfooler-ng.git
-```
-
-
+``` 
 You need to install python NetfilterQueue (v0.8.1 or more) linux package. Download from [PyPi](https://pypi.org/project/NetfilterQueue/0.8.1/):
 ``` 
 $ wget https://files.pythonhosted.org/packages/39/c4/8f73f70442aa4094b3c37876c96cddad2c3e74c058f6cd9cb017d37ffac0/NetfilterQueue-0.8.1.tar.gz
 $ tar -xzf NetfilterQueue-0.8.1.tar.gz
 $ cd NetfilterQueue-0.8.1
-$ sudo python setup.py install
+$ sudo python2 setup.py install
 ```
 or try: 
 ```
-$ pip install NetfilterQueue
+$ pip2 install NetfilterQueue
 ```
 
 Install OSfooler-ng in the standard way:
 ```
-$ sudo python setup.py install
+$ sudo python2 setup.py install
 ```
+
+There're also [instructions](https://github.com/moonbaseDelta/OSfooler-ng/wiki/Installation) for some specific distros in project's Wiki.
+
+
 
 
 ## Known issues 
