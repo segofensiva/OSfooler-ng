@@ -767,7 +767,7 @@ def cb_nmap( pl):
             print_icmp_packet(pl)
             pl.drop() 
             if (base["IE"][0][0] != "R"):
-                send_icmp_response(payload, "IE")
+                send_icmp_response(pl, "IE")
         elif (pkt.icmp.code == 0) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 150):
             # nmap packet detected: Packet ICMP #2
             print_icmp_packet(pl)
@@ -970,6 +970,14 @@ def main():
   try:
     for proc in procs:
       proc.join()
+      print
+      # Flush all iptabels rules
+      if (q_num0 >= 0):
+        os.system("iptables -D INPUT -j NFQUEUE --queue-num %s" % q_num0) 
+      if (q_num1 >= 1):
+        os.system("iptables -D OUTPUT -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+      print " [+] Active queues removed"
+      print " [+] Exiting OSfooler..." 
   except KeyboardInterrupt:
       print
       # Flush all iptabels rules
