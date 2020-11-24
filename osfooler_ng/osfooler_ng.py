@@ -968,8 +968,8 @@ def main():
   # Detect mode
 
   try:
-    for proc in procs:
-      proc.join()
+      for proc in procs:
+        proc.join()
       print
       # Flush all iptabels rules
       if (q_num0 >= 0):
