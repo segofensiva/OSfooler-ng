@@ -57,7 +57,7 @@ class p0fKnowledgeBase(KnowledgeBase):
             for l in f:
                 if l[0] in ["#","\n"]:
                     continue
-                l = tuple(l.split(":"))
+                l = tuple(l.strip().split(":"))
                 if len(l) < 8:
                     continue
                 def a2i(x):
@@ -68,7 +68,7 @@ class p0fKnowledgeBase(KnowledgeBase):
                 #if li[0] not in self.ttl_range:
                 #    self.ttl_range.append(li[0])
                 #    self.ttl_range.sort()
-                self.base.append((l[0], li[0], li[1], li[2], l[4], l[5], l[6], l[7][:-1]))
+                self.base.append((l[0], li[0], li[1], li[2], l[4], l[5], l[6], l[7]))
         except:
             warning("Can't parse p0f database (new p0f version ?)")
             self.base = None
