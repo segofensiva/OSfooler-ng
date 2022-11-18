@@ -546,7 +546,7 @@ def search_os(search_string):
     # Search p0f database
     db = module_p0f.p0f_kdb.get_base()
     p0f_values = []
-    for i in range(0, 250):
+    for i in range(0, len(db)):
       if (re.search(search_string, db[i][6], re.IGNORECASE) or re.search(search_string, db[i][7], re.IGNORECASE)) :
         p0f_values.append("OS: \"" + db[i][6] + "\" DETAILS: \"" + db[i][7] + "\"")
     # Print results
@@ -873,7 +873,7 @@ def main():
   if opts.p0f:
     print("Please, select p0f OS Genre and Details")
     db = module_p0f.p0f_kdb.get_base()
-    for i in range(0, 250):
+    for i in range(0, len(db)):
       print "\tOS Genre=\"%s\" Details=\"%s\"" % (db[i][6], db[i][7])
     exit(0)
 
@@ -927,16 +927,17 @@ def main():
     print " [+] Mutating to p0f:"
     db = module_p0f.p0f_kdb.get_base()
     exists = 0
+    db_size = len(db)
     if (opts.osgenre == "random"):
-      rand_os = randint(0,250)
+      rand_os = randint(0,db_size)
       opts.osgenre = db[rand_os][6]
     if (not opts.details_p0f):
-      for i in range(0, 250):
+      for i in range(0, db_size):
         if (db[i][6] == opts.osgenre):
           print "      WWW:%s|TTL:%s|D:%s|SS:%s|OOO:%s|QQ:%s|OS:%s|DETAILS:%s" % (db[i][0],db[i][1],db[i][2],db[i][3],db[i][4],db[i][5],db[i][6],db[i][7])
           exists = 1
     if (opts.details_p0f):
-      for i in range(0, 250):
+      for i in range(0, db_size):
         if (db[i][6] == opts.osgenre and db[i][7] == opts.details_p0f):
           print "      WWW:%s|TTL:%s|D:%s|SS:%s|OOO:%s|QQ:%s|OS:%s|DETAILS:%s" % (db[i][0],db[i][1],db[i][2],db[i][3],db[i][4],db[i][5],db[i][6],db[i][7])
           exists = 1
