@@ -954,7 +954,7 @@ def main():
   procs = []
   # nmap mode
   if opts.os:  
-    os.system("iptables -A INPUT -j NFQUEUE --queue-num %s" % q_num0) 
+    os.system("iptables -A INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
     proc = Process(target=init,args=(q_num0,))
     procs.append(proc)
     proc.start() 
@@ -962,7 +962,7 @@ def main():
   if (opts.osgenre):
     global home_ip
     home_ip = get_ip_address(interface)  
-    os.system("iptables -A OUTPUT -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+    os.system("iptables -A OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
     proc = Process(target=init,args=(q_num1,))
     procs.append(proc)
     proc.start() 
@@ -974,18 +974,18 @@ def main():
       print
       # Flush all iptabels rules
       if (q_num0 >= 0):
-        os.system("iptables -D INPUT -j NFQUEUE --queue-num %s" % q_num0) 
+        os.system("iptables -D INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
       if (q_num1 >= 1):
-        os.system("iptables -D OUTPUT -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+        os.system("iptables -D OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
       print " [+] Active queues removed"
       print " [+] Exiting OSfooler..." 
   except KeyboardInterrupt:
       print
       # Flush all iptabels rules
       if (q_num0 >= 0):
-        os.system("iptables -D INPUT -j NFQUEUE --queue-num %s" % q_num0) 
+        os.system("iptables -D INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
       if (q_num1 >= 1):
-        os.system("iptables -D OUTPUT -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+        os.system("iptables -D OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
       print " [+] Active queues removed"
       print " [+] Exiting OSfooler..."
       #for p in multiprocessing.active_children():
