@@ -1,54 +1,76 @@
+ 
 <p align="center">
-<img width="256" src="https://i.ibb.co/DLnNK9J/268497.png">
-</p>
-<br>
-
-# OSfooler-NG
- [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Version: 1.0](https://img.shields.io/badge/version-1.0-blue.svg)
+  <h1>
+   OSfooler-NG
+   <img align="right" width="256" src="https://github.com/moonbaseDelta/OSfooler-ng/blob/master/logo.png">
+  </h1> 
+ </p> 
+<br> 
+ 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Version: 1.0b](https://img.shields.io/badge/version-1.0b-blue.svg)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/segofensiva/OSfooler-ng/graphs/commit-activity)
+ 
+# Synopsis
+ 
+This is a fork of [segofensiva/OSfooler-ng](https://github.com/segofensiva/OSfooler-ng). 
 
-An outsider has the capability to discover general information, such as which operating system a host is running, by searching for default stack parameters, ambiguities in IETF RFCs or non-compliant TCP/IP implementations in responses to malformed requests. By pinpointing the exact OS of a host, an attacker can launch an educated and precise attack against a target machine.
+Main reason of that fork is that original project seems to be an abandoned proof-of-concept, but the project is still valuable. 
+By now the main difference is the change of Python2's nfqueue (NetfilterQueue) version from 0.5 to 0.8.1 for the sake of run the OSfooler-ng on different distros, not just deb-based. 
 
-There are lot of reasons to hide your OS to the entire world:
- * Revealing your OS makes things easier to find and successfully run an exploit against any of your devices.
- * Having and unpatched or antique OS version is not very convenient for your company prestige. Imagine that your company is a bank and some users notice that you are running an unpatched box. They won't trust you any longer! In addition, these kind of 'bad' news are always sent to the public opinion.
- * Knowing your OS can also become more dangerous, because people can guess which applications are you running in that OS (data inference). For example if your system is a MS Windows, and you are running a database, it's highly likely that you are running MS-SQL.
- * It could be convenient for other software companies, to offer you a new OS environment (because they know which you are running).
- * And finally, privacy; nobody needs to know the systems you've got running.
+Yes, it's Python2 yet. If you know how to properly move NetfilterQueue to Python 3.6+ and can test the project nicely and in short time - [your help is welcome](https://github.com/moonbaseDelta/OSfooler-ng/issues/1).
 
-OSfooler was presented at Blackhat Arsenal 2013. It was built on NFQUEUE, an iptables/ip6tables target which delegate the decision on packets to a userspace. It transparently intercepted all traffic that your box was sending in order to camouflage and modify in real time the flags in TCP/IP packets that discover your system.
+Original author's project presentation can be found on Youtube [https://www.youtube.com/watch?v=psxxT00KavM](https://www.youtube.com/watch?v=psxxT00KavM). You may also find a few articles about OSfooler-NG. This version is a remake of 2014' OSfooler made by the same person, but the old one is archived and should be concidered lost.
+The whole topic of OS-fingerprinting and it's defeating is rather obscure.  
+OSfooler-NG is working, but not yet perfect even against nmap and p0f. Any futher help, even testcases, and so is highly needed.
 
-OSfooler-NG has been complete rewriten from the ground up, being highly portable, more efficient and combining all known techniques to detect and defeat at the same time:
- * Active remote OS fingerprinting: like Nmap
- * Passive remote OS fingeprinting: like p0f v2
- * Commercial engines like Sourcefire’s FireSiGHT OS fingerprinting
+By now it's been tested fine on Arch and CentOS7, CentOS8, Ubuntu 18.04. 
+ 
 
-Some additional features are:
- * No need for kernel modification or patches
- * Simple user interface and several logging features
- * Transparent for users, internal process and services
- * Detecting and defeating mode: active, passive & combined
- * Will emulate any OS
- * Capable of handling updated nmap and p0f v2 fingerprint database
- * Undetectable for the attacker
 
-# Install
-To get the latest versions, with bugfixes and new features, but maybe not as stable, use the the Github repository:
+**You may help hugely by trying this on different distros and submit issues.**
+By now it's been tested fine on Arch and CentOS7.
+
+
+
+# Installation
+
+
+To get this version, just use git:
 ```
-$ git clone https://github.com/segofensiva/OSfooler-ng.git
+$ git clone https://github.com/moonbaseDelta/OSfooler-ng.git
+``` 
+You need to install python NetfilterQueue (v0.8.1 or more) linux package. Download from [PyPi](https://pypi.org/project/NetfilterQueue/0.8.1/):
+``` 
+$ wget https://files.pythonhosted.org/packages/39/c4/8f73f70442aa4094b3c37876c96cddad2c3e74c058f6cd9cb017d37ffac0/NetfilterQueue-0.8.1.tar.gz
+$ tar -xzf NetfilterQueue-0.8.1.tar.gz
+$ cd NetfilterQueue-0.8.1
+$ sudo python2 setup.py install
 ```
-
-You need to install python-nfqueue (v0.5-1build2) linux package. Download from [Ubuntu Packages](https://packages.ubuntu.com/xenial/python-nfqueue):
+or try: 
 ```
-$ wget http://mirrors.kernel.org/ubuntu/pool/universe/n/nfqueue-bindings/python-nfqueue_0.5-1build2_amd64.deb
-$ dpkg -i python-nfqueue_0.5-1build2_amd64.deb
+$ pip2 install NetfilterQueue
 ```
 
 Install OSfooler-ng in the standard way:
 ```
-$ sudo python setup.py install
+$ sudo python2 setup.py install
 ```
+
+There're also [instructions](https://github.com/moonbaseDelta/OSfooler-ng/wiki/Installation) for some specific distros in project's Wiki.
+
+
+
+
+## Known issues 
+No such device IO error (error code 19): 
+  * By default program uses 'eth0' interface that may not be even exist on your machine
+  * Find your main TCP/IP interface (you can find it by 'ip a' command)
+  * Run OSfooler-ng commands with:
+```
+$ <osfooler command> -i 'YOURINTERFACE'
+```
+
 
 # Usage
 ## Active Fingerprinting: nmap
@@ -192,6 +214,4 @@ This project is licensed under the The **GNU General Public License v3.0** - see
 
 # Acknowledgments
 
-* [Defcon China](https://defcon.org/html/dc-china-1/dc-cn-1-index.html), for leting me show this tool on [Demo Labs](https://defcon.org/html/dc-china-1/dc-cn-1-demolabs.html#segofensiva)
-* All those people who have worked and released software on OS fingerprinting (attack and defense), specially [nmap](https://nmap.org/) & [p0f](lcamtuf.coredump.cx/), but also Xprobe, IP Personality etc.
-* OSfooler-ng makes use of the [Scapy Project](https://scapy.net/) and [The netfilter.org "libnetfilter_queue" project](https://netfilter.org/projects/libnetfilter_queue/)
+* https://github.com/segofensiva/OSfooler-ng#acknowledgments

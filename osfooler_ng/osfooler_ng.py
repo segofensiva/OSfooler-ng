@@ -12,7 +12,7 @@ import optparse
 import sys
 import time
 import os
-import nfqueue
+import netfilterqueue as nfqueue
 import ConfigParser
 import ast
 l = logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -34,6 +34,10 @@ sys.path.append('dpkt-1.6')
 # Initialize statistic variables
 icmp_packet = 0
 IPID = 0
+
+# Started NFQueues
+q_num0 = -1
+q_num1 = -1
 
 # TCP packet information
 # Control flags
@@ -136,7 +140,7 @@ def show_banner():
   .-::::oo--/+/+o/`         \____/____  >|__| \____/ \____/|____/\___  |__|            |___|  \___  / 
  /+/++:-/s+///:-`                     \/                             \/                     \/_____/ 
  `  `-///s:                           
-      `-os.                           v1.0 (https://github.com/segofensiva/osfooler-ng)
+      `-os.                           v1.0b (https://github.com/segofensiva/osfooler-ng)
        /s:                                                                                                                                                   
 """)
 
@@ -217,11 +221,10 @@ def get_ipid_new(test):
   return i
 
 # Send ICMP response
-def send_icmp_response(payload, probe):
+def send_icmp_response(pl, probe):
   global icmp_packet
-  global icmp_ipid
-  data = payload.get_data()
-  pkt = ip.IP(data)
+  global icmp_ipid 
+  pkt = ip.IP(pl.get_payload())
   # DON'T FRAGMENT ICMP (DFI)
   if (base[probe][0][1] == "N"):
     frag_bit = 0  # None have it activated
@@ -262,9 +265,8 @@ def send_icmp_response(payload, probe):
        / ICMP(id=pkt.icmp.data.id, seq=pkt.icmp.data.seq, code=code, type=0), verbose=0)
 
 # Send UDP response
-def send_udp_response(payload, probe):
-  data = payload.get_data()
-  pkt = ip.IP(data)
+def send_udp_response(pl, probe): 
+  pkt = ip.IP(pl.get_payload())
   if (base[probe][0][1] == "Y"):
     frag_bit = 2
   else:
@@ -276,10 +278,9 @@ def send_udp_response(payload, probe):
     IP(dst=inet_ntoa(pkt.dst), src=inet_ntoa(pkt.src), id=pkt.id, ttl=TG - 1) / UDP(dport=pkt.udp.dport, sport=pkt.udp.sport), verbose=0)
 
 # Send probe response
-def send_probe_response(payload, probe):
-  global IPID
-  data = payload.get_data()
-  pkt = ip.IP(data)
+def send_probe_response(pl, probe):
+  global IPID 
+  pkt = ip.IP(pl.get_payload())
   # IP DON'T FRAGMENT BIT (DF)
   if (base[probe][1][1] == "Y"):
     frag_bit = 2
@@ -334,10 +335,9 @@ def send_probe_response(payload, probe):
 
 # ECN
 # Send probe response
-def send_ECN_response(payload, probe):
-    global IPID
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def send_ECN_response(pl, probe):
+    global IPID 
+    pkt = ip.IP(pl.get_payload())
     # IP DON'T FRAGMENT BIT (DF)
     df_parsed = parse_nmap_field(base[probe][1][1])
     if (df_parsed == "Y"):
@@ -396,10 +396,9 @@ def send_ECN_response(payload, probe):
     send(IP(id=IPID, dst=inet_ntoa(pkt.src), src=inet_ntoa(pkt.dst), flags=frag_bit, ttl=TG) /
       TCP(sport=pkt.tcp.dport, dport=pkt.tcp.sport, window=W, options=opts, flags=FLAGS), verbose=0)
 
-def send_probe_response_T1(payload, probe, packet):
-    global IPID
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def send_probe_response_T1(pl, probe, packet):
+    global IPID 
+    pkt = ip.IP(pl.get_payload()) 
     # IP DON'T FRAGMENT BIT (DF)
     df_parsed = parse_nmap_field(base[probe][1][1])
     if (df_parsed == "Y"):
@@ -547,7 +546,7 @@ def search_os(search_string):
     # Search p0f database
     db = module_p0f.p0f_kdb.get_base()
     p0f_values = []
-    for i in range(0, 250):
+    for i in range(0, len(db)):
       if (re.search(search_string, db[i][6], re.IGNORECASE) or re.search(search_string, db[i][7], re.IGNORECASE)) :
         p0f_values.append("OS: \"" + db[i][6] + "\" DETAILS: \"" + db[i][7] + "\"")
     # Print results
@@ -593,29 +592,28 @@ def options_to_scapy(x):
             options.append(('EOL', None))
     return options
 
-def print_tcp_packet(payload, destination):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_tcp_packet(pl, destination): 
+    pkt = ip.IP(pl.get_payload())
     option_list = tcp.parse_opts(pkt.tcp.opts)
+    
     if opts.verbose:
-        print " [+] Modifying '%s' packet in real time (total length %s)" % (destination, payload.get_length())
+        print " [+] Modifying '%s' packet in real time (total length %s)" % (destination, pl.get_payload_len())
         print "      [+] IP:  source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] TCP: sport %s dport %s flags S seq %s ack %s win %s" % (pkt.tcp.sport, pkt.tcp.dport, pkt.tcp.seq, pkt.tcp.ack, pkt.tcp.win)
         print "               options %s" % (opts_human(option_list))
 
-def print_icmp_packet(payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_icmp_packet(pl): 
+    pkt = ip.IP(pl.get_payload())
     if opts.verbose:
-        print " [+] Modifying packet in real time (total length %s)" % payload.get_length()
+        print " [+] Modifying packet in real time (total length %s)" % pl.get_payload_len()
         print "      [+] IP:   source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] ICMP: code %s type %s len %s id %s seq %s" % (pkt.icmp.code, pkt.icmp.type, len(pkt.icmp.data.data), pkt.icmp.data.id, pkt.icmp.data.seq)
 
-def print_udp_packet(payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def print_udp_packet(pl): 
+    pkt = ip.IP(pl.get_payload())
+
     if opts.verbose:
-        print " [+] Modifying packet in real time (total length %s)" % payload.get_length()
+        print " [+] Modifying packet in real time (total length %s)" % pl.get_payload_len()
         print "      [+] IP:   source %s destination %s tos %s id %s" % (inet_ntoa(pkt.src), inet_ntoa(pkt.dst), pkt.tos, pkt.id)
         print "      [+] UDP:  sport %s dport %s len %s" % (pkt.udp.sport, pkt.udp.dport, len(pkt.udp.data))
         print "                data %s" % (pkt.udp.data[0:49])
@@ -626,9 +624,9 @@ def print_udp_packet(payload):
         print "                     %s" % (pkt.udp.data[250:299])
 
 # Process p0f packets
-def cb_p0f(i, payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
+def cb_p0f( pl ): 
+
+    pkt = ip.IP(pl.get_payload())
     
     if (inet_ntoa(pkt.src) == home_ip) and (pkt.p == ip.IP_PROTO_TCP) and (tcp_flags(pkt.tcp.flags) == "S"):
         options = pkt.tcp.opts.encode('hex_codec')
@@ -642,149 +640,157 @@ def cb_p0f(i, payload):
                 pkt_send = module_p0f.p0f_impersonate(IP(dst=inet_ntoa(pkt.dst), src=inet_ntoa(pkt.src), id=pkt.id, tos=pkt.tos) / TCP(
                     sport=pkt.tcp.sport, dport=pkt.tcp.dport, flags='S', seq=pkt.tcp.seq, ack=0), i, osgenre=opts.osgenre, osdetails=opts.details_p0f)
                 if opts.verbose:
-                    print_tcp_packet(payload, "p0f")
+                    print_tcp_packet(pl, "p0f")
+                pl.set_payload(str(pkt_send))
+                pl.accept()  
             except Exception, e:
                 print " [+] Unable to modify packet with p0f personality..."
                 print " [+] Aborting"
                 sys.exit()
-            payload.set_verdict_modified(nfqueue.NF_ACCEPT, str(pkt_send), len(pkt_send))
         elif opts.osgenre and not opts.details_p0f:
             try:
                 pkt_send = module_p0f.p0f_impersonate(IP(dst=inet_ntoa(pkt.dst), src=inet_ntoa(pkt.src)) / TCP(
                     sport=pkt.tcp.sport, dport=pkt.tcp.dport, flags='S', seq=pkt.tcp.seq), i, osgenre=opts.osgenre)
                 if opts.verbose:
-                  print_tcp_packet(payload, "p0f")
+                  print_tcp_packet(pl, "p0f") 
+                pl.set_payload(str(pkt_send))
+                pl.accept() 
             except Exception, e:
                 print " [+] Unable to modify packet with p0f personality..."
                 print " [+] Aborting"
                 sys.exit()
-            payload.set_verdict_modified(nfqueue.NF_ACCEPT, str(pkt_send), len(pkt_send))
+        else:
+            pl.accept()
     else:
-      payload.set_verdict(nfqueue.NF_ACCEPT)
-    return 0
+		    pl.accept()
+      #  return 0
 
 # Process nmap packets
-def cb_nmap(i, payload):
-    data = payload.get_data()
-    pkt = ip.IP(data)
-    
+def cb_nmap( pl): 
+    pkt = ip.IP(pl.get_payload())   
     if pkt.p == ip.IP_PROTO_TCP:
         # Define vars for conditional loops
         options = pkt.tcp.opts.encode('hex_codec')
         flags = tcp_flags(pkt.tcp.flags)
         if (flags == "S") and (pkt.tcp.win == 1) and (options == T1_opt1):
             # nmap packet detected: Packet1 #1
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 1)
+                send_probe_response_T1(pl, "T1", 1)
         elif (flags == "S") and (pkt.tcp.win == 63) and (options == T1_opt2):
             # nmap packet detected: Packet1 #2
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 2)
+                send_probe_response_T1(pl, "T1", 2)
         elif (flags == "S") and (pkt.tcp.win == 4) and (options == T1_opt3):
             # nmap packet detected: Packet1 #3
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 3)
+                send_probe_response_T1(pl, "T1", 3)
         elif (flags == "S") and (pkt.tcp.win == 4) and (options == T1_opt4):
             # nmap packet detected: Packet1 #4
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 4)
+                send_probe_response_T1(pl, "T1", 4)
         elif (flags == "S") and (pkt.tcp.win == 16) and (options == T1_opt5):
             # nmap packet detected: Packet1 #5
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 5)
+                send_probe_response_T1(pl, "T1", 5)
         elif (flags == "S") and (pkt.tcp.win == 512) and (options == T1_opt6):
             # nmap packet detected: Packet1 #6
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T1"][0][1] == "Y"):
-                send_probe_response_T1(payload, "T1", 6)
+                send_probe_response_T1(pl, "T1", 6)
         elif (flags == "") and (pkt.tcp.win == 128) and (options == T2_T6_opt):
             # nmap packet detected: Packet2
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T2"][0][1] == "Y"):
-                send_probe_response(payload, "T2")
+                send_probe_response(pl, "T2")
         elif (flags == "FSPU") and (pkt.tcp.win == 256) and (options == T2_T6_opt):
             # nmap packet detected: Packet3
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T3"][0][1] == "Y"):
-                send_probe_response(payload, "T3")
+                send_probe_response(pl, "T3")
         elif (flags == "A") and (pkt.tcp.win == 1024) and (options == T2_T6_opt):
             # nmap packet detected: Packet4
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T4"][0][1] == "Y"):
-                send_probe_response(payload, "T4")
+                send_probe_response(pl, "T4")
         elif (flags == "S") and (pkt.tcp.win == 31337) and (options == T2_T6_opt):
             # nmap packet detected: Packet5
-            print_tcp_packet(payload, "nmap")
+            print_tcp_packet(pl, "nmap")
             if (base["T5"][0][1] == "Y"):
-                send_probe_response(payload, "T5")
+                send_probe_response(pl, "T5")
         elif (flags == "A") and (pkt.tcp.win == 32768) and (options == T2_T6_opt):
             # nmap packet detected: Packet6
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T6"][0][1] == "Y"):
-                send_probe_response(payload, "T6")
+                send_probe_response(pl, "T6")
         elif (flags == "FPU") and (pkt.tcp.win == 65535) and (options == T7_opt):
             # nmap packet detected: Packet7
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["T7"][0][1] == "Y"):
-                send_probe_response(payload, "T7")
+                send_probe_response(pl, "T7")
         elif (flags == "SEC") and (pkt.tcp.win == 3) and (options == ECN_opt):
             # nmap packet detected: Packet ECE
-            print_tcp_packet(payload, "nmap")
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_tcp_packet(pl, "nmap")
+            pl.drop() 
             if (base["ECN"][0][1] == "Y"):
-                send_ECN_response(payload, "ECN")
+                send_ECN_response(pl, "ECN")
+        else:
+            pl.accept()
     elif pkt.p == ip.IP_PROTO_UDP:
         if (pkt.udp.data == udp_payload):
             # nmap packet detected: Packet UDP
-            print_udp_packet(payload)
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_udp_packet(pl)
+            pl.drop() 
             # TODO
-            # if ( base["U1"][0][0] != "R" ):
-                # send_udp_response(payload, "U1")
+            if ( base["U1"][0][0] != "R" ):
+                send_udp_response(pl, "U1")
+        else:
+          pl.accept()
     elif pkt.p == ip.IP_PROTO_ICMP:
         if (pkt.icmp.code == 9) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 120):
             # nmap packet detected: Packet ICMP #1
-            print_icmp_packet(payload)
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_icmp_packet(pl)
+            pl.drop() 
             if (base["IE"][0][0] != "R"):
-                send_icmp_response(payload, "IE")
-        if (pkt.icmp.code == 0) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 150):
+                send_icmp_response(pl, "IE")
+        elif (pkt.icmp.code == 0) and (pkt.icmp.type == 8) and (len(pkt.icmp.data.data) == 150):
             # nmap packet detected: Packet ICMP #2
-            print_icmp_packet(payload)
-            payload.set_verdict(nfqueue.NF_DROP)
+            print_icmp_packet(pl)
+            pl.drop() 
             if (base["IE"][0][0] != "R"):
-                send_icmp_response(payload, "IE")
+                send_icmp_response(pl, "IE")
+        else: 
+            pl.accept() 
     else:
-        payload.set_verdict(nfqueue.NF_ACCEPT)
-    return 0
+        pl.accept() 
+        return 0
+
 
 def init(queue):
-  q = nfqueue.queue()
-  if (queue == 0):
-    q.set_callback(cb_nmap)
+  q = nfqueue.NetfilterQueue()
+  if (queue % 2 ==  0):
+    q.bind(queue, cb_nmap)
     print "      [->] %s: nmap packet processor" % multiprocessing.current_process().name
-  if (queue == 1 and (opts.osgenre or (opts.details_p0f and opts.osgenre))):
-    q.set_callback(cb_p0f)
+  if (queue % 2 ==  1 and (opts.osgenre or (opts.details_p0f and opts.osgenre))):
+    q.bind(queue, cb_p0f)
     print "      [->] %s: p0f packet processor" % multiprocessing.current_process().name
-  q.fast_open(queue, AF_INET)
-  try:
-    q.try_run()
+  try: 
+    q.run()
   except KeyboardInterrupt,err:
     pass
 
@@ -867,7 +873,7 @@ def main():
   if opts.p0f:
     print("Please, select p0f OS Genre and Details")
     db = module_p0f.p0f_kdb.get_base()
-    for i in range(0, 250):
+    for i in range(0, len(db)):
       print "\tOS Genre=\"%s\" Details=\"%s\"" % (db[i][6], db[i][7])
     exit(0)
 
@@ -887,9 +893,21 @@ def main():
   user_is_root()
 
   if opts.interface:
-    interface = opts.interface
+    interface = opts.interface 
+    try:
+      q_num0 = os.listdir("/sys/class/net/").index(opts.interface) * 2
+      q_num1 = os.listdir("/sys/class/net/").index(opts.interface) * 2 + 1
+    except ValueError, err:
+      q_num0 = -1
+      q_num1 = -1
   else:
-    interface = "eth0"
+    interface = "eth0" # you may paste here your main interface found by '$~: ip a', for instance  
+    try:
+      q_num0 = os.listdir("/sys/class/net/").index(opts.interface) * 2
+      q_num1 = os.listdir("/sys/class/net/").index(opts.interface) * 2 + 1
+    except ValueError, err:
+      q_num0 = -1
+      q_num1 = -1
 
   # Global -> get values from cb_nmap() and cb_p0f
   global base
@@ -909,16 +927,17 @@ def main():
     print " [+] Mutating to p0f:"
     db = module_p0f.p0f_kdb.get_base()
     exists = 0
+    db_size = len(db)
     if (opts.osgenre == "random"):
-      rand_os = randint(0,250)
+      rand_os = randint(0,db_size)
       opts.osgenre = db[rand_os][6]
     if (not opts.details_p0f):
-      for i in range(0, 250):
+      for i in range(0, db_size):
         if (db[i][6] == opts.osgenre):
           print "      WWW:%s|TTL:%s|D:%s|SS:%s|OOO:%s|QQ:%s|OS:%s|DETAILS:%s" % (db[i][0],db[i][1],db[i][2],db[i][3],db[i][4],db[i][5],db[i][6],db[i][7])
           exists = 1
     if (opts.details_p0f):
-      for i in range(0, 250):
+      for i in range(0, db_size):
         if (db[i][6] == opts.osgenre and db[i][7] == opts.details_p0f):
           print "      WWW:%s|TTL:%s|D:%s|SS:%s|OOO:%s|QQ:%s|OS:%s|DETAILS:%s" % (db[i][0],db[i][1],db[i][2],db[i][3],db[i][4],db[i][5],db[i][6],db[i][7])
           exists = 1
@@ -934,28 +953,39 @@ def main():
   print " [+] Activating queues"
   procs = []
   # nmap mode
-  if opts.os:
-    os.system("iptables -A INPUT -j NFQUEUE --queue-num 0")
-    proc = Process(target=init,args=(0,))
+  if opts.os:  
+    os.system("iptables -A INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
+    proc = Process(target=init,args=(q_num0,))
     procs.append(proc)
-    proc.start()
+    proc.start() 
   # p0f mode
   if (opts.osgenre):
     global home_ip
-    home_ip = get_ip_address(interface)
-    os.system("iptables -A OUTPUT -p TCP --syn -j NFQUEUE --queue-num 1")
-    proc = Process(target=init,args=(1,))
+    home_ip = get_ip_address(interface)  
+    os.system("iptables -A OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+    proc = Process(target=init,args=(q_num1,))
     procs.append(proc)
-    proc.start()
+    proc.start() 
   # Detect mode
 
   try:
-    for proc in procs:
-      proc.join()
+      for proc in procs:
+        proc.join()
+      print
+      # Flush all iptabels rules
+      if (q_num0 >= 0):
+        os.system("iptables -D INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
+      if (q_num1 >= 1):
+        os.system("iptables -D OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
+      print " [+] Active queues removed"
+      print " [+] Exiting OSfooler..." 
   except KeyboardInterrupt:
       print
       # Flush all iptabels rules
-      os.system("iptables -F")
+      if (q_num0 >= 0):
+        os.system("iptables -D INPUT -t mangle -j NFQUEUE --queue-num %s" % q_num0) 
+      if (q_num1 >= 1):
+        os.system("iptables -D OUTPUT -t mangle -p TCP --syn -j NFQUEUE --queue-num %s" % q_num1) 
       print " [+] Active queues removed"
       print " [+] Exiting OSfooler..."
       #for p in multiprocessing.active_children():
